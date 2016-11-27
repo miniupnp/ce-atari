@@ -516,6 +516,8 @@ void Scsi::ProcScsi6(void)
     case SCSI_C_FORMAT_UNIT:        SCSI_FormatUnit();                  break;
     case SCSI_C_READ6:              SCSI_ReadWrite6(true);              break;
     case SCSI_C_WRITE6:             SCSI_ReadWrite6(false);             break;
+    case SCSI_C_START_STOP_UNIT:      returnInvalidCommand();//TODO
+        break;
 
     default:                        returnInvalidCommand();             break;
     }
@@ -648,6 +650,17 @@ void Scsi::SCSI_Inquiry(void)
 {
     WORD i,xx;
     BYTE val;
+    BYTE peripheral_device_type = 0;
+        // 00h = Direct access block device (e.g., magnetic disk)
+        // 01h = Sequential-access device (e.g., magnetic tape)
+        // 02h = Printer device
+        // 03h = Processor device
+        // 04h = Write-once device (e.g., some optical disks)
+        // 05h = CD/DVD device
+        // 06h = Scanner device (obsolete)
+        // 07h = Optical memory device (e.g., some optical disks)
+        // 08h = Medium changer device (e.g., jukeboxes)
+        // 09h = Communications device (obsolete)
 
     BYTE *vendor = (BYTE *) "JOOKIE  ";
     char type_str[5] = {' ', ' ', ' ', ' ', '\0'};
@@ -682,6 +695,10 @@ void Scsi::SCSI_Inquiry(void)
         case SOURCETYPE_SD_CARD:
           memcpy(type_str, "SD  ", 4);
           break;
+        case SOURCETYPE_SLM_PRINTER:
+          memcpy(type_str, "SLM ", 4);
+          peripheral_device_type = 2;
+          break;
         default:
           snprintf(type_str, sizeof(type_str), "%4d", type);
         }
@@ -697,39 +714,25 @@ void Scsi::SCSI_Inquiry(void)
             val = 0;
         }
 
-        if(i==1) {                      // 1st byte
-            val = 0x80;                 // removable (RMB) bit set
-        }
-
-        if(i==2 || i==3) {              // 2nd || 3rd byte
-            val = 0x02;                 // SCSI level || response data format
-        }
-
-        if(i==4) {
-            val = 0x27;                 // 4th byte = Additional length
-        }
-
-        if(i>=8 && i<=15) {             // send vendor (JOOKIE)
+        if(i==0) {
+            val = peripheral_device_type; // Byte 0 : Peripheral Qualifier << 5 | Peripheral Device Type
+        } else if(i==1) {
+            val = 0x80;                 // Byte 1 : removable (RMB) bit set
+        } else if(i==2 || i==3) {
+            val = 0x02;                 // Bytes 2&3 : SCSI level || response data format
+        } else if(i==4) {
+            val = 0x27;                 // Byte 4 = Additional length
+        } else if(i>=8 && i<=15) {             // send vendor (JOOKIE)
             val = vendor[i-8];
-        }
-
-        if(i>=16 && i<=23) {            // send device name (CosmosEx)
+        } else if(i>=16 && i<=23) {            // send device name (CosmosEx)
             val = inquiryName[i-16];
-        }
-
-        if(i == 25) {                   // send ACSI ID # (0 .. 7)
+        } else if(i == 25) {                   // send ACSI ID # (0 .. 7)
             val = '0' + acsiId;
-        }
-
-        if(i>=27 && i<31) {             // send type
+        } else if(i>=27 && i<31) {             // send type
             val = type_str[i-27];
-        }
-
-        if(i>=32 && i<=35) {            // version string
+        } else if(i>=32 && i<=35) {            // version string
             val = VERSION_STRING_SHORT[i-32];
-        }
-
-        if(i>=36 && i<=43) {            // date string
+        } else if(i>=36 && i<=43) {            // date string
             val = DATE_STRING[i-36];
         }
 
@@ -743,6 +746,21 @@ void Scsi::SCSI_ModeSense6(void)
 {
     WORD length, i, len;
     BYTE PageCode, val;
+// TODO : for SLM
+// 00h    : list length
+// 01-02h : Block height
+// 03-04h : block width
+// 05-06h : Top Margin
+// 07-08h : Left Margin
+// 09h    : 0 | Thick pixels | prefeed paper | autoselect | input select(3bits) | manual feed
+// 0a-0bh : Vertical Resolution
+// 0c-0dh : Horizontal Resolution
+// 0eh    : System Timeout
+// 0f-10h : Scan Time
+// 11-12h : Page count
+// 13-14h : Input Capacity
+// 15-16h : Output Capacity
+// 17h    : 0 | 0 | Color separation | Duplex print | Output select(3bits) | Stagger Output
     //-----------------
     const BYTE page_control[] = {0x0a, 0x06, 0, 0, 0, 0, 0, 0};
     const BYTE page_medium[]  = {0x0b, 0x06, 0, 0, 0, 0, 0, 0};

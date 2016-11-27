@@ -23,6 +23,7 @@
 #define SOURCETYPE_IMAGE_TRANSLATEDBOOT 2
 #define SOURCETYPE_DEVICE               3
 #define SOURCETYPE_SD_CARD				4
+#define SOURCETYPE_SLM_PRINTER			5
 #define SOURCETYPE_TESTMEDIA            100
 
 #define MAX_ATTACHED_MEDIA              9

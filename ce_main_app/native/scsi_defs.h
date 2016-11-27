@@ -2,26 +2,27 @@
 // INQUIRY              x
 // REQUEST SENSE        x
 // SEND DIAGNOSTIC      x
-// TEST UNIT READY      x 
+// TEST UNIT READY      x
 // FORMAT UNIT          x
 // READ(6)              x
-// READ(10)             x              
+// READ(10)             x
 // READ CAPACITY        x
 // RELEASE              x
 // RESERVE              x
 
 // commands with length 6 bytes
-#define SCSI_C_WRITE6                           0x0a
+#define SCSI_C_TEST_UNIT_READY                  0x00
+#define SCSI_C_REQUEST_SENSE                    0x03
+#define SCSI_C_FORMAT_UNIT                      0x04
 #define SCSI_C_READ6                            0x08
-#define SCSI_C_MODE_SENSE6                      0x1a
-#define SCSI_C_START_STOP_UNIT                  0x1b	
-#define SCSI_C_FORMAT_UNIT                      0x04	
-#define SCSI_C_INQUIRY                          0x12	
-#define SCSI_C_REQUEST_SENSE                    0x03	
-#define SCSI_C_TEST_UNIT_READY                  0x00	
-#define SCSI_C_SEND_DIAGNOSTIC                  0x1d
+#define SCSI_C_WRITE6                           0x0a
+#define SCSI_C_INQUIRY                          0x12
+#define SCSI_C_MODE_SELECT                      0x15
 #define SCSI_C_RESERVE                          0x16
 #define SCSI_C_RELEASE                          0x17
+#define SCSI_C_MODE_SENSE6                      0x1a
+#define SCSI_C_START_STOP_UNIT                  0x1b
+#define SCSI_C_SEND_DIAGNOSTIC                  0x1d
 
 // commands with length 10 bytes
 #define SCSI_C_WRITE10                          0x2a
