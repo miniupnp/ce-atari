@@ -744,8 +744,8 @@ void Scsi::SCSI_ModeSense6(void)
     WORD length, i, len;
     BYTE PageCode, val;
     //-----------------
-    BYTE page_control[]    = {0x0a, 0x06, 0, 0, 0, 0, 0, 0};
-    BYTE page_medium[]    = {0x0b, 0x06, 0, 0, 0, 0, 0, 0};
+    const BYTE page_control[] = {0x0a, 0x06, 0, 0, 0, 0, 0, 0};
+    const BYTE page_medium[]  = {0x0b, 0x06, 0, 0, 0, 0, 0, 0};
     //-----------------
     PageCode    = cmd[2] & 0x3f;    // get only page code
     length        = cmd[4];                  // how many bytes should be sent
