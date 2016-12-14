@@ -7,7 +7,7 @@ TOOLS = $(wildcard *.prg)
 TOOLS += $(wildcard *.tos)
 TOOLS += $(wildcard *.ttp)
 
-all:	ce_conf.st
+all:	ce_conf.st ce_conf.zip
 
 ce_conf.st:	$(DRIVERS) $(TOOLS) $(TESTS) readme.txt
 	$(RM) $@
@@ -19,3 +19,8 @@ ce_conf.st:	$(DRIVERS) $(TOOLS) $(TESTS) readme.txt
 	MTOOLS_NO_VFAT=1 mcopy -i $@ -v $(DRIVERS) ::/DRIVERS
 	MTOOLS_NO_VFAT=1 mcopy -i $@ -v $(TESTS) ::/TESTS
 
+# zip options :
+# -k : MSDOS compatible names and attributes
+ce_conf.zip:	$(DRIVERS) $(TOOLS) $(TESTS) readme.txt
+	$(RM) $@
+	zip -k $@ $^
