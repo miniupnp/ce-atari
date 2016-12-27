@@ -104,7 +104,7 @@ private:
 	AcsiIDinfo		acsiIdInfo;
 	
     BYTE *cmd;
-    BYTE inquiryName[10];
+    const char * inquiryName;
 
     bool isICDcommand(void);
 

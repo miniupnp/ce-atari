@@ -17,7 +17,7 @@ Scsi::Scsi(void)
     int i;
 
     dataTrans = 0;
-    strcpy((char *) inquiryName, "CosmosEx");
+    inquiryName = "CosmosEx";
 
     dataBuffer  = new BYTE[SCSI_BUFFER_SIZE];
     dataBuffer2 = new BYTE[SCSI_BUFFER_SIZE];
@@ -167,6 +167,16 @@ bool Scsi::attachToHostPath(std::string hostPath, int hostSourceType, int access
         attachedMedia[index].accessType     = SCSI_ACCESSTYPE_FULL;
         attachedMedia[index].dataMediaDynamicallyAllocated = false;         // didn't use new on .dataMedia
         break;
+
+    case SOURCETYPE_SLM_PRINTER:
+        Debug::out(LOG_DEBUG, "Scsi::attachToHostPath - SLM PRINTER media stored at index %d", index);
+
+        attachedMedia[index].hostPath       = hostPath;
+        attachedMedia[index].hostSourceType = hostSourceType;
+        attachedMedia[index].dataMedia      = &testMedia;
+        attachedMedia[index].accessType     = SCSI_ACCESSTYPE_FULL;
+        attachedMedia[index].dataMediaDynamicallyAllocated = false;         // didn't use new on .dataMedia
+        break;
     }
 
     res = attachMediaToACSIid(index, hostSourceType, accessType);          // last step - attach media to ACSI ID
@@ -182,7 +192,18 @@ bool Scsi::attachToHostPath(std::string hostPath, int hostSourceType, int access
 
 bool Scsi::attachMediaToACSIid(int mediaIndex, int hostSourceType, int accessType)
 {
-    for(int i=0; i<8; i++) {                                                // find empty and proper ACSI ID
+    int start = 0;
+    int end = 8;
+    int step = 1;
+
+    if(hostSourceType == SOURCETYPE_SLM_PRINTER) {
+        // reverse order for SLM printer (attach to highest ID possible)
+        start = 7;
+        end = -1;
+        step = -1;
+    }
+
+    for(int i = start; i != end; i += step) {                                                // find empty and proper ACSI ID
         // if this index is already used, skip it
         if(devInfo[i].attachedMediaIndex != -1) {
             continue;
@@ -396,6 +417,7 @@ void Scsi::loadSettings(void)
             Debug::out(LOG_ERROR, "Scsi::loadSettings fail to attach HDDIMAGE %s", img.c_str());
         }
     }
+    attachToHostPath("SLM PRINTER", SOURCETYPE_SLM_PRINTER, SCSI_ACCESSTYPE_FULL);
 }
 
 void Scsi::processCommand(BYTE *command)
@@ -662,7 +684,9 @@ void Scsi::SCSI_Inquiry(void)
         // 08h = Medium changer device (e.g., jukeboxes)
         // 09h = Communications device (obsolete)
 
-    BYTE *vendor = (BYTE *) "JOOKIE  ";
+    const BYTE *vendor = (const BYTE *) "JOOKIE  ";
+    const BYTE * deviceName = (const BYTE *)inquiryName;
+    const BYTE * slmString = (const BYTE *)"PAGE PRINTER"; // 12
     char type_str[5] = {' ', ' ', ' ', ' ', '\0'};
 
     if(dataMedia->mediaChanged())                                   // this command clears the unit attention state
@@ -696,6 +720,8 @@ void Scsi::SCSI_Inquiry(void)
           memcpy(type_str, "SD  ", 4);
           break;
         case SOURCETYPE_SLM_PRINTER:
+          //deviceName = (const BYTE *)"PAGE PRI";
+          //memcpy(type_str, "NTER", 4);
           memcpy(type_str, "SLM ", 4);
           peripheral_device_type = 2;
           break;
@@ -703,8 +729,12 @@ void Scsi::SCSI_Inquiry(void)
           snprintf(type_str, sizeof(type_str), "%4d", type);
         }
     }
+    // NPAGE PRINTER
     //-----------
-    xx = cmd[4];                                              // how many bytes should be sent
+    xx = (cmd[3] << 8) + cmd[4];                                              // how many bytes should be sent
+    Debug::out(LOG_DEBUG, "Scsi::SCSI_Inquiry dev_type=%d vendor='%s' name='%s' type='%s' xx=%d", (int)peripheral_device_type, (const char*)vendor, deviceName, type_str, (int)xx);
+    if(xx == 0 && peripheral_device_type == 2)
+        xx = 256;
 
     for(i=0; i<xx; i++)
     {
@@ -717,15 +747,17 @@ void Scsi::SCSI_Inquiry(void)
         if(i==0) {
             val = peripheral_device_type; // Byte 0 : Peripheral Qualifier << 5 | Peripheral Device Type
         } else if(i==1) {
-            val = 0x80;                 // Byte 1 : removable (RMB) bit set
+            val = (peripheral_device_type == 2)?0:0x80; // Byte 1 : removable (RMB) bit set
         } else if(i==2 || i==3) {
             val = 0x02;                 // Bytes 2&3 : SCSI level || response data format
         } else if(i==4) {
             val = 0x27;                 // Byte 4 = Additional length
+        } else if(peripheral_device_type == 2 && (i>=5 && i <= 17)) {
+            val = slmString[i-5];
         } else if(i>=8 && i<=15) {             // send vendor (JOOKIE)
             val = vendor[i-8];
         } else if(i>=16 && i<=23) {            // send device name (CosmosEx)
-            val = inquiryName[i-16];
+            val = deviceName[i-16];
         } else if(i == 25) {                   // send ACSI ID # (0 .. 7)
             val = '0' + acsiId;
         } else if(i>=27 && i<31) {             // send type
