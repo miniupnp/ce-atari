@@ -1,3 +1,4 @@
+// vim: shiftwidth=4 softtabstop=4 tabstop=4 expandtab
 #include <string.h>
 
 #include "gpio.h"
@@ -208,16 +209,17 @@ WORD CConSpi::getRemainingLength(void)
     return remainingPacketLength;
 }
 
-void CConSpi::txRx(int whichSpiCs, int count, BYTE *sendBuffer, BYTE *receiveBufer)
+void CConSpi::txRx(int whichSpiCs, int count, const BYTE *sendBuffer, BYTE *receiveBufer)
 {
-    if(SWAP_ENDIAN) {       // swap endian on sending if required
-        BYTE tmp;
+    BYTE * swappedBuffer = NULL;
 
+    if(SWAP_ENDIAN) {       // swap endian on sending if required
+        swappedBuffer = new BYTE[(count+1) & ~1];
         for(int i=0; i<count; i += 2) {
-            tmp             = sendBuffer[i+1];
-            sendBuffer[i+1] = sendBuffer[i];
-            sendBuffer[i]   = tmp;
+            swappedBuffer[i]   = sendBuffer[i+1];
+            swappedBuffer[i+1] = sendBuffer[i];
         }
+        sendBuffer = swappedBuffer;
     }
 
     if(count == TXRX_COUNT_REST) {          // if should TX/RX the rest, use the remaining length
@@ -234,12 +236,14 @@ void CConSpi::txRx(int whichSpiCs, int count, BYTE *sendBuffer, BYTE *receiveBuf
 
 #ifdef DEBUG_SPI_COMMUNICATION
     Debug::out(LOG_DEBUG, "CConSpi::txRx - count: %d", count);
-#endif	
+#endif
 
-	spi_tx_rx(whichSpiCs, count, sendBuffer, receiveBufer);
+    spi_tx_rx(whichSpiCs, count, sendBuffer, receiveBufer);
+
+    if(SWAP_ENDIAN)
+        delete [] swappedBuffer;
 
     if(remainingPacketLength != NO_REMAINING_LENGTH) {
         remainingPacketLength -= count;             // mark that we've send this much data
     }
 }
-

@@ -1022,7 +1022,7 @@ void CCoreThread::handleSendTrack(void)
 
     Debug::out(LOG_DEBUG, "ATN_SEND_TRACK -- Franz wants: [track %d, side %d]. Current image has: [track %d, side %d, sectors/track: %d]", track, side, tr, si, spt);
 
-    BYTE *encodedTrack;
+    const BYTE *encodedTrack;
     int countInTrack;
 
     if(side < 0 || side > 1 || track < 0 || track >= tr) {      // side / track out of range? use empty track

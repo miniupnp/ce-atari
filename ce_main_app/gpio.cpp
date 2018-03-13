@@ -66,7 +66,7 @@ void bcm2835_gpio_write(int a, int b)
     pthread_mutex_unlock(&tcpMutex);
 }
 
-void spi_tx_rx(int whichSpiCS, int count, BYTE *txBuf, BYTE *rxBuf)
+void spi_tx_rx(int whichSpiCS, int count, const BYTE *txBuf, BYTE *rxBuf)
 {
     pthread_mutex_lock(&tcpMutex);
 
@@ -142,14 +142,14 @@ void bcm2835_close(void) {}
 void bcm2835_gpio_write(int a, int b) {}
 int  bcm2835_gpio_lev(int a) {return 0; }
 void bcm2835_spi_transfernb(char *txBuf, char *rxBuf, int c) { }
-void spi_tx_rx(int whichSpiCS, int count, BYTE *txBuf, BYTE *rxBuf){}
+void spi_tx_rx(int whichSpiCS, int count, const BYTE *txBuf, BYTE *rxBuf){}
 bool spi_atn(int whichSpiAtn) { return false; }
 #endif
 
 //------------------------------------------------------------------------------------------------------------------------
 
 #if !defined(ONPC_GPIO) && !defined(ONPC_HIGHLEVEL) && !defined(ONPC_NOTHING)
-void spi_tx_rx(int whichSpiCS, int count, BYTE *txBuf, BYTE *rxBuf)
+void spi_tx_rx(int whichSpiCS, int count, const BYTE *txBuf, BYTE *rxBuf)
 {
     bcm2835_spi_chipSelect(whichSpiCS);
 	bcm2835_spi_transfernb((char *) txBuf, (char *) rxBuf, count); 

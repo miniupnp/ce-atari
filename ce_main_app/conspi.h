@@ -17,7 +17,7 @@ public:
     ~CConSpi();
 
 	bool waitForATN(int whichSpiCs, BYTE atnCode, DWORD timeoutMs, BYTE *inBuf);
-    void txRx(int whichSpiCs, int count, BYTE *sendBuffer, BYTE *receiveBufer);
+    void txRx(int whichSpiCs, int count, const BYTE *sendBuffer, BYTE *receiveBuffer);
 
 	void applyTxRxLimits(int whichSpiCs, BYTE *inBuff);
 	void applyNoTxRxLimis(int whichSpiCs);

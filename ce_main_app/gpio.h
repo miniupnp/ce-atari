@@ -97,7 +97,7 @@ void bcmSpiAddData(int count, char *data);
 bool gpio_open(void);
 void gpio_close(void);
 
-void spi_tx_rx(int whichSpiCS, int count, BYTE *txBuf, BYTE *rxBuf);
+void spi_tx_rx(int whichSpiCS, int count, const BYTE *txBuf, BYTE *rxBuf);
 bool spi_atn(int whichSpiAtn);
 
 #endif
