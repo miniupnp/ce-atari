@@ -11,6 +11,9 @@ class FloppyImageSt: public FloppyImage
 {
 public:
     virtual bool open(const char *fileName);
+
+    static bool createNewImage(std::string pathAndFile);
+
 private:
     bool calcParams(void);
 };

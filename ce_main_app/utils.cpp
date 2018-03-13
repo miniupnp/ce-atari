@@ -382,13 +382,6 @@ void Utils::getIpAdds(BYTE *bfrIPs, BYTE *bfrMasks)
     freeifaddrs(ifaddr);
 }
 
-void Utils::forceSync(void)
-{
-	TMounterRequest tmr;			
-	tmr.action	= MOUNTER_ACTION_SYNC;                          // let the mounter thread do filesystem caches sync 						
-	Mounter::add(tmr);
-}
-
 WORD Utils::getWord(BYTE *bfr)
 {
     WORD val = 0;
@@ -488,11 +481,12 @@ void Utils::setTimezoneVariable_inProfileScript(void)
     
     Debug::out(LOG_DEBUG, "Utils::setTimezoneVariable_inProfileScript() -- creating timezone setting script like this: %s\n", tzString);
     
+	// TODO : do not use system() just to create a file...
     system("mkdir -p /etc/profile.d");                          // if this dir doesn't exist, create it
     system(tzString);                                           // now create the script in the dir above
     system("chmod 755 /etc/profile.d/set_timezone.sh");         // make it executable
     
-    forceSync();                                                // make sure it does to disk
+    //forceSync();                                                // make sure it does to disk
 }
 
 void Utils::setTimezoneVariable_inThisContext(void)

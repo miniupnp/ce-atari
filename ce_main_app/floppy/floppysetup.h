@@ -28,8 +28,6 @@ public:
     void setImageSilo(ImageSilo *imgSilo);
     void setSettingsReloadProxy(SettingsReloadProxy *rp);
 
-    static bool createNewImage(std::string pathAndFile);
-
 private:
     AcsiDataTrans       *dataTrans;
     ImageSilo           *imageSilo;
