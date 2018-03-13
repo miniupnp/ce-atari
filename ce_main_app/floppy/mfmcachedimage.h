@@ -25,7 +25,7 @@ public:
     void encodeAndCacheImage(FloppyImage *img, bool bufferOfBytes=false);
     void deleteCachedImage(void);
     
-	BYTE *getEncodedTrack(int track, int side, int &bytesInBuffer);
+	const BYTE *getEncodedTrack(int track, int side, int &bytesInBuffer);
 	bool getParams(int &tracks, int &sides, int &sectorsPerTrack);
 
 	void copyFromOther(MfmCachedImage &other);

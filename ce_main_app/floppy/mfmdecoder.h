@@ -9,7 +9,7 @@ class MfmDecoder
 public:
     MfmDecoder();
 
-    void decodeStream(BYTE *inStream, int inCount, BYTE *outData, int &outCount);
+    void decodeStream(const BYTE *inStream, int inCount, BYTE *outData, int &outCount);
 
 private:
     void addNormalBit(BYTE bit);

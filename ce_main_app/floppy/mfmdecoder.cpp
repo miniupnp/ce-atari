@@ -15,7 +15,7 @@ MfmDecoder::MfmDecoder()
     byte = 0;
 }
 
-void MfmDecoder::decodeStream(BYTE *inStream, int inCount, BYTE *outData, int &outCount)
+void MfmDecoder::decodeStream(const BYTE *inStream, int inCount, BYTE *outData, int &outCount)
 {
     decoded = outData;
     index   = 0;

@@ -60,9 +60,9 @@ public:
     BYTE getSlotBitmap(void);
     void setCurrentSlot(int index);
     int  getCurrentSlot(void);
-    BYTE *getEncodedTrack(int track, int side, int &bytesInBuffer);
+    const BYTE *getEncodedTrack(int track, int side, int &bytesInBuffer);
     bool getParams(int &tracks, int &sides, int &sectorsPerTrack);
-    BYTE *getEmptyTrack(void);
+    const BYTE *getEmptyTrack(void);
 
     void add(int positionIndex, std::string &filename, std::string &hostDestPath, std::string &atariSrcPath, std::string &hostSrcPath, bool saveToSettings);
     void swap(int index);
@@ -84,7 +84,7 @@ private:
     static void addEncodeRequest(EncodeRequest &er);
 
     SiloSlot                slots[4];
-    int                        currentSlot;
+    int                     currentSlot;
     SettingsReloadProxy     *reloadProxy;
 
     BYTE                    *emptyTrack;

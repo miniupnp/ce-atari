@@ -37,7 +37,7 @@ void test(const char * filename)
         for (track = 0; track < tracks; track++) {
             for (side = 0; side < sides; side++) {
                 int trackdatalen;
-                BYTE * trackdata = pxImageSilo->getEncodedTrack(track, side, trackdatalen);
+                const BYTE * trackdata = pxImageSilo->getEncodedTrack(track, side, trackdatalen);
                 if (trackdata != NULL) {
                     std::cout << "getEncodedTrack(" << track << ", " << side << ") : " << trackdatalen << " bytes" << std::endl;
                     char tmp[256];
@@ -64,8 +64,10 @@ int main(int argc, char * * argv)
     std::cout << "testing floppy code" << std::endl;
     if (pthread_create(&floppyEncThreadInfo, NULL, floppyEncodeThreadCode, NULL) != 0)
         std::cout << "pthread_create error" << std::endl;
+
     test(image_filename);
-    printf("Stoping floppy encoder thread\n");
+
+    printf("Stopping floppy encoder thread\n");
     ImageSilo::stop();
     pthread_join(floppyEncThreadInfo, NULL);            // wait until floppy encode thread finishes
 

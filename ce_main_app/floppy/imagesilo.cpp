@@ -173,7 +173,7 @@ ImageSilo::~ImageSilo()
     delete []emptyTrack;
 }
 
-BYTE *ImageSilo::getEmptyTrack(void)
+const BYTE *ImageSilo::getEmptyTrack(void)
 {
     return emptyTrack;
 }
@@ -392,9 +392,9 @@ int ImageSilo::getCurrentSlot(void)
     return currentSlot;
 }
 
-BYTE *ImageSilo::getEncodedTrack(int track, int side, int &bytesInBuffer)
+const BYTE *ImageSilo::getEncodedTrack(int track, int side, int &bytesInBuffer)
 {
-    BYTE *pTrack;
+    const BYTE *pTrack;
 
     pthread_mutex_lock(&floppyEncodeQueueMutex);                                        // lock the mutex
     pTrack = slots[currentSlot].encImage.getEncodedTrack(track, side, bytesInBuffer);    // get data from current slot

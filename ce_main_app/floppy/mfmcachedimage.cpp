@@ -166,7 +166,7 @@ void MfmCachedImage::deleteCachedImage(void)
     gotImage = false;
 }
 
-BYTE *MfmCachedImage::getEncodedTrack(int track, int side, int &bytesInBuffer)
+const BYTE *MfmCachedImage::getEncodedTrack(int track, int side, int &bytesInBuffer)
 {
     if(!gotImage) {                                             // if don't have the cached stuff yet
         bytesInBuffer = 0;
@@ -217,7 +217,7 @@ void MfmCachedImage::copyFromOther(MfmCachedImage &other)
             }
             
 			int bytesInBuffer;
-			BYTE *src = other.getEncodedTrack(track, side, bytesInBuffer);	// get pointer to source track
+			const BYTE *src = other.getEncodedTrack(track, side, bytesInBuffer);	// get pointer to source track
 	
 			int index = track * 2 + side;
 			if(index >= MAX_TRACKS) {                                   // index out of bounds?
