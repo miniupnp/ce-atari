@@ -23,3 +23,4 @@ script:
   - 'make atari_progs'
   - 'cp ce_main_app/cosmosex_onpc ce_main_app/cosmosex_yocto'
   - 'make update'
+  - 'make check ONPC=yes'

@@ -161,9 +161,12 @@ lib/libcivetweb_onpc.a: lib/civetweb-master.zip
 	rm -rf lib/civetweb-master
 endif
 
-.PHONY:	clean depclean all tests
+.PHONY:	clean depclean all tests check
 
 TESTS_BINS = $(addprefix tests/, floppytest)
+
+check:	tests
+	tests/floppytest
 
 tests:	$(TESTS_BINS)
 
