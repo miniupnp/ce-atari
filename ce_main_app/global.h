@@ -1,3 +1,4 @@
+// vim: tabstop=4 softtabstop=4 shiftwidth=4 expandtab
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
@@ -5,7 +6,8 @@
 
 // defines for Floppy part
 // commands sent from device to host
-#define ATN_FW_VERSION              0x01       		// followed by string with FW version (length: 4 WORDs - cmd, v[0], v[1], 0)
+#define ATN_NONE                    0x00
+#define ATN_FW_VERSION              0x01            // followed by string with FW version (length: 4 WORDs - cmd, v[0], v[1], 0)
 #define ATN_SEND_NEXT_SECTOR        0x02            // sent: 2, side, track #, current sector #, 0, 0, 0, 0 (length: 4 WORDs)
 #define ATN_SECTOR_WRITTEN          0x03            // sent: 3, side (highest bit) + track #, current sector #
 #define ATN_SEND_TRACK              0x04            // send the whole track

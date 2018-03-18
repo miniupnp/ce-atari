@@ -180,9 +180,8 @@ void CCoreThread::sharedObjects_destroy(void)
 
 void CCoreThread::run(void)
 {
-    BYTE inBuff[8], outBuf[8];
+    BYTE inBuff[8];
 
-    memset(outBuf, 0, 8);
     memset(inBuff, 0, 8);
 
     loadSettings();
@@ -242,7 +241,7 @@ void CCoreThread::run(void)
     lastFwInfoTime.franzResetTime   = Utils::getCurrentMs();
 
 #if !defined(ONPC_GPIO) && !defined(ONPC_HIGHLEVEL) && !defined(ONPC_NOTHING)
-    bool res;
+    BYTE hansAtn, franzAtn;
 #endif
     
     DWORD nextFloppyEncodingCheck   = Utils::getEndTime(1000);
@@ -345,12 +344,15 @@ void CCoreThread::run(void)
         
 #if !defined(ONPC_HIGHLEVEL) && !defined(ONPC_NOTHING)
         // check for any ATN code waiting from Hans
-        res = conSpi->waitForATN(SPI_CS_HANS, (BYTE) ATN_ANY, 0, inBuff);
+        if (conSpi->waitForATN(SPI_CS_HANS, (BYTE) ATN_ANY, 0, inBuff))
+            hansAtn = inBuff[3];
+        else
+            hansAtn = ATN_NONE;
 
-        if(res) {    // HANS is signaling attention?
+        if(hansAtn != ATN_NONE) {    // HANS is signaling attention?
             gotAtn = true;  // we've some ATN
 
-            switch(inBuff[3]) {
+            switch(hansAtn) {
                 case ATN_FW_VERSION:
                     statuses.hans.aliveTime = now;
                     statuses.hans.aliveSign = ALIVE_FWINFO;
@@ -374,7 +376,7 @@ void CCoreThread::run(void)
                 break;
 
             default:
-                Debug::out(LOG_ERROR, "CCoreThread received weird ATN code %02x waitForATN()", inBuff[3]);
+                Debug::out(LOG_ERROR, "CCoreThread received weird ATN code %02x from HANS", hansAtn);
                 break;
             }
         }
@@ -386,9 +388,7 @@ void CCoreThread::run(void)
         }
 
 #if defined(ONPC_HIGHLEVEL)
-        res = gotCmd();
-
-        if(res) {
+        if (gotCmd()) {
             handleAcsiCommand();
         }
 #endif
@@ -396,15 +396,18 @@ void CCoreThread::run(void)
 #if !defined(ONPC_GPIO) && !defined(ONPC_HIGHLEVEL) && !defined(ONPC_NOTHING)
         // check for any ATN code waiting from Franz
         if(flags.noFranz) {                         // if running without Franz, don't communicate
-            res = false;
+            franzAtn = ATN_NONE;
         } else {                                    // running with Franz - check for any ATN
-            res = conSpi->waitForATN(SPI_CS_FRANZ, (BYTE) ATN_ANY, 0, inBuff);
+            if(conSpi->waitForATN(SPI_CS_FRANZ, (BYTE) ATN_ANY, 0, inBuff))
+                franzAtn = inBuff[3];
+            else
+                franzAtn = ATN_NONE;
         }
         
-        if(res) {                                    // FRANZ is signaling attention?
+        if(franzAtn != ATN_NONE) {                                    // FRANZ is signaling attention?
             gotAtn = true;                            // we've some ATN
 
-            switch(inBuff[3]) {
+            switch(franzAtn) {
             case ATN_FW_VERSION:                    // device has sent FW version
                 statuses.franz.aliveTime = now;
                 statuses.franz.aliveSign = ALIVE_FWINFO;
@@ -434,7 +437,7 @@ void CCoreThread::run(void)
                 break;
 
             default:
-                Debug::out(LOG_ERROR, "CCoreThread received weird ATN code %02x waitForATN()", inBuff[3]);
+                Debug::out(LOG_ERROR, "CCoreThread received weird ATN code %02x from FRANZ", franzAtn);
                 break;
             }
         }
