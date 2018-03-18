@@ -82,6 +82,8 @@ bool CConSpi::waitForATNs(int timeoutMs, BYTE & hansAtn, BYTE & franzAtn)
         if(waitForATN(SPI_CS_FRANZ, (BYTE) ATN_ANY, 0, inBuf))
             franzAtn = inBuf[3];
         firstTimeReadingAtn = false;
+        if (fdAtnHans < 0 && hansAtn == ATN_NONE && franzAtn == ATN_NONE)
+            Utils::sleepMs(1);  // wait a litte for ccorethread mainloop
         return true;
     }
 

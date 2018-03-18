@@ -224,34 +224,32 @@ void CCoreThread::run(void)
         DWORD hans;
         DWORD franz;
         DWORD nextDisplay;
-        
+
         DWORD hansResetTime;
         DWORD franzResetTime;
-        
+
         int     progress;
     } lastFwInfoTime;
-    char progChars[4] = {'|', '/', '-', '\\'};
-    
+    const char progChars[4] = {'|', '/', '-', '\\'};
+
     lastFwInfoTime.hans         = 0;
     lastFwInfoTime.franz        = 0;
     lastFwInfoTime.nextDisplay  = Utils::getEndTime(1000);
     lastFwInfoTime.progress     = 0;
-    
+
     lastFwInfoTime.hansResetTime    = Utils::getCurrentMs();
     lastFwInfoTime.franzResetTime   = Utils::getCurrentMs();
 
 #if !defined(ONPC_GPIO) && !defined(ONPC_HIGHLEVEL) && !defined(ONPC_NOTHING)
     BYTE hansAtn, franzAtn;
 #endif
-    
+
     DWORD nextFloppyEncodingCheck   = Utils::getEndTime(1000);
     bool prevFloppyEncodingRunning  = false;
-    
+
     LoadTracker load;
 
     while(sigintReceived == 0) {
-        bool gotAtn = false;                                            // no ATN received yet?
-        
         // if should just get the HW version and HDD interface, but timeout passed, quit
         if(flags.getHwInfo && Utils::getCurrentMs() >= getHwInfoTimeout) {
             showHwVersion();                                            // show the default HW version
@@ -261,33 +259,33 @@ void CCoreThread::run(void)
         DWORD now = Utils::getCurrentMs();
         if(now >= lastFwInfoTime.nextDisplay) {
             lastFwInfoTime.nextDisplay  = Utils::getEndTime(1000);
-            
+
             //-------------
             // calculate load, show message if needed
             load.calculate();                                           // calculate load
-            
+
             if(load.suspicious) {                                       // load is suspiciously high?
                 Debug::out(LOG_DEBUG, ">>> Suspicious core cycle load -- cycle time: %4d ms, load: %3d %%", load.cycle.total, load.loadPercents);
                 printf(">>> Suspicious core cycle load -- cycle time: %4d ms, load: %3d %%\n", load.cycle.total, load.loadPercents);
 
                 lastFwInfoTime.hansResetTime    = now;
                 lastFwInfoTime.franzResetTime   = now;
-                }
+            }
             //-------------
-            
+
             float hansTime  = ((float)(now - lastFwInfoTime.hans))  / 1000.0f;
             float franzTime = ((float)(now - lastFwInfoTime.franz)) / 1000.0f;
-            
+
             hansTime    = (hansTime  < 15.0f) ? hansTime  : 15.0f;
             franzTime   = (franzTime < 15.0f) ? franzTime : 15.0f;
-            
+
             bool hansAlive  = (hansTime < 3.0f);
             bool franzAlive = (franzTime < 3.0f);
-            
+
             printf("\033[2K  [ %c ]  Hans: %s, Franz: %s\033[A\n", progChars[lastFwInfoTime.progress], hansAlive ? "LIVE" : "DEAD", franzAlive ? "LIVE" : "DEAD");
-        
+
             lastFwInfoTime.progress = (lastFwInfoTime.progress + 1) % 4;
-            
+
             if(!hansAlive && !flags.noReset && (now - lastFwInfoTime.hansResetTime) >= 3000) {
                 printf("\033[2KHans not alive, resetting Hans.\n");
                 Debug::out(LOG_INFO, "Hans not alive, resetting Hans.");
@@ -344,14 +342,10 @@ void CCoreThread::run(void)
         
 #if !defined(ONPC_HIGHLEVEL) && !defined(ONPC_NOTHING)
         // check for any ATN code waiting from Hans
-        if (conSpi->waitForATN(SPI_CS_HANS, (BYTE) ATN_ANY, 0, inBuff))
-            hansAtn = inBuff[3];
-        else
-            hansAtn = ATN_NONE;
+        conSpi->waitForATNs(1000, hansAtn, franzAtn);
+        // TODO : check what must be done if(flags.noFranz)
 
         if(hansAtn != ATN_NONE) {    // HANS is signaling attention?
-            gotAtn = true;  // we've some ATN
-
             switch(hansAtn) {
                 case ATN_FW_VERSION:
                     statuses.hans.aliveTime = now;
@@ -395,18 +389,7 @@ void CCoreThread::run(void)
 
 #if !defined(ONPC_GPIO) && !defined(ONPC_HIGHLEVEL) && !defined(ONPC_NOTHING)
         // check for any ATN code waiting from Franz
-        if(flags.noFranz) {                         // if running without Franz, don't communicate
-            franzAtn = ATN_NONE;
-        } else {                                    // running with Franz - check for any ATN
-            if(conSpi->waitForATN(SPI_CS_FRANZ, (BYTE) ATN_ANY, 0, inBuff))
-                franzAtn = inBuff[3];
-            else
-                franzAtn = ATN_NONE;
-        }
-        
         if(franzAtn != ATN_NONE) {                                    // FRANZ is signaling attention?
-            gotAtn = true;                            // we've some ATN
-
             switch(franzAtn) {
             case ATN_FW_VERSION:                    // device has sent FW version
                 statuses.franz.aliveTime = now;
@@ -429,7 +412,7 @@ void CCoreThread::run(void)
             case ATN_SEND_TRACK:                    // device requests data of a whole track
                 statuses.franz.aliveTime = now;
                 statuses.franz.aliveSign = ALIVE_READ;
-            
+
                 statuses.fdd.aliveTime   = now;
                 statuses.fdd.aliveSign   = ALIVE_READ;
 
@@ -442,13 +425,9 @@ void CCoreThread::run(void)
             }
         }
 #else
-    flags.gotFranzFwVersion = true;
+        flags.gotFranzFwVersion = true;
 #endif
         load.busy.markEnd();                        // mark the end of the busy part of the code
-
-        if(!gotAtn) {                                // no ATN was processed?
-            Utils::sleepMs(1);                        // wait 1 ms...
-        }
     }
 }
 
