@@ -482,7 +482,7 @@ void Utils::setTimezoneVariable_inProfileScript(void)
     char tzString[128];
     sprintf(tzString, "echo 'export TZ=\"%s\"' > /etc/profile.d/set_timezone.sh", utcOfsset);
     
-    Debug::out(LOG_DEBUG, "Utils::setTimezoneVariable_inProfileScript() -- creating timezone setting script like this: %s\n", tzString);
+    Debug::out(LOG_DEBUG, "Utils::setTimezoneVariable_inProfileScript() -- creating timezone setting script like this: %s", tzString);
     
     system("mkdir -p /etc/profile.d");                          // if this dir doesn't exist, create it
     system(tzString);                                           // now create the script in the dir above
@@ -496,7 +496,7 @@ void Utils::setTimezoneVariable_inThisContext(void)
     char utcOfsset[64];
     createTimezoneString(utcOfsset);
 
-    Debug::out(LOG_DEBUG, "Utils::setTimezoneVariable_inThisContext() -- setting TZ variable to: %s\n", utcOfsset);
+    Debug::out(LOG_DEBUG, "Utils::setTimezoneVariable_inThisContext() -- setting TZ variable to: %s", utcOfsset);
     
     setenv("TZ", utcOfsset, 1);
 }
