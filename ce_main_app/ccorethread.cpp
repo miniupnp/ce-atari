@@ -1046,7 +1046,7 @@ void CCoreThread::handleSectorWritten(void)
 
     memset(oBuf, 0, BUFFSIZE);
 
-    WORD remainingSize = conSpi->getRemainingLength();              // get how many data we still have
+    WORD remainingSize = conSpi->getRemainingLength(SPI_CS_FRANZ);  // get how many data we still have
     conSpi->txRx(SPI_CS_FRANZ, remainingSize, oBuf, iBuf);          // get all the remaining data
 
     // get the written sector, side, track number
