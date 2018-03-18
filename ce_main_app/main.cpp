@@ -508,7 +508,7 @@ void sigint_handler(int sig)
 	sigintReceived = 1;
     
     if(childPid != 0) {             // in case we fork()ed, kill the child
-        Debug::out(LOG_DEBUG, "Killing child with pid %d\n", childPid);
+        Debug::out(LOG_DEBUG, "Killing child with pid %d", childPid);
         kill(childPid, SIGKILL);
     }
 }
