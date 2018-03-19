@@ -338,12 +338,12 @@ void CCoreThread::run(void)
             prevFloppyEncodingRunning = ImageSilo::getFloppyEncodingRunning();
         }
         
-        load.busy.markStart();                          // mark the start of the busy part of the code
-        
 #if !defined(ONPC_HIGHLEVEL) && !defined(ONPC_NOTHING)
         // check for any ATN code waiting from Hans
-        conSpi->waitForATNs(1000, hansAtn, franzAtn);
+        conSpi->waitForATNs(500, hansAtn, franzAtn);
         // TODO : check what must be done if(flags.noFranz)
+
+        load.busy.markStart();                          // mark the start of the busy part of the code
 
         if(hansAtn != ATN_NONE) {    // HANS is signaling attention?
             switch(hansAtn) {
@@ -424,10 +424,10 @@ void CCoreThread::run(void)
                 break;
             }
         }
+        load.busy.markEnd();                        // mark the end of the busy part of the code
 #else
         flags.gotFranzFwVersion = true;
 #endif
-        load.busy.markEnd();                        // mark the end of the busy part of the code
     }
 }
 
