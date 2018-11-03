@@ -4,8 +4,10 @@
 #include <string.h>
 #include <dirent.h>
 #include <fcntl.h>
+#if defined(__linux__)
 #include <linux/input.h>
 #include <linux/joystick.h>
+#endif
 #include <errno.h>
 #include <unistd.h>
 
@@ -493,6 +495,7 @@ void Ikbd::processKeyboard(input_event *ev, bool skipKeyboardTranslation)
     }
 }
 
+#if defined(__linux__)
 void Ikbd::processJoystick(js_event *jse, int joyNumber)
 {
     TJoystickState *js;
@@ -573,6 +576,7 @@ void Ikbd::processJoystick(js_event *jse, int joyNumber)
         }
     }
 }
+#endif
 
 int Ikbd::getFdByIndex(int index)
 {
@@ -642,6 +646,7 @@ void Ikbd::handlePcKeyAsKeybJoy(int joyNumber, int pcKey, int eventValue)
 
 void Ikbd::handleKeyAsKeybJoy(bool pcNotSt, int joyNumber, int pcKey, bool keyDown)
 {
+#if defined(__linux__)
     js_event jse;
 
     if(keyJoyKeys.isKeyUp(pcNotSt, joyNumber, pcKey)) {
@@ -667,6 +672,7 @@ void Ikbd::handleKeyAsKeybJoy(bool pcNotSt, int joyNumber, int pcKey, bool keyDo
     }
 
     processJoystick(&jse, joyNumber);
+#endif
 }
 
 void Ikbd::toggleKeyboardExclusiveAccess(void)

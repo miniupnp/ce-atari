@@ -6,7 +6,14 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <queue>
+#if defined(__linux__)
 #include <pty.h>
+#else
+// theses are the FreeBSD #include's needed for forkpty()
+// this is there only for the builds with ONPC=yes (for testing)
+#include <termios.h>
+#include <libutil.h>
+#endif
 #include <sys/file.h>
 #include <errno.h>
 
@@ -533,7 +540,9 @@ void handlePthreadCreate(int res, const char *threadName, pthread_t *pThread)
         Debug::out(LOG_ERROR, "Failed to create %s thread, %s won't work...", threadName, threadName);
     } else {
         Debug::out(LOG_DEBUG, "%s thread created", threadName);
+#if defined(__linux__)
         pthread_setname_np(*pThread, threadName);
+#endif
     }
 }
 

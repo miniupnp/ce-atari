@@ -14,7 +14,11 @@
 #include <fcntl.h>
 
 #include <sys/ioctl.h>
+#if defined(__linux__)
 #include <linux/msdos_fs.h>
+#else
+//#include <fs/msdosfs/direntry.h>
+#endif
 
 #include "../global.h"
 #include "../debug.h"
@@ -783,6 +787,7 @@ void TranslatedDisk::onFattrib(BYTE *cmd)
 	
     Utils::attributesHostToAtari(isReadOnly, isDir, oldAttrAtari);
 	{
+#if defined(__linux__)
 		int fd = open(hostName.c_str(), O_RDONLY);
 		if(fd >= 0) {
 			__u32 dosattrs = 0;
@@ -795,8 +800,14 @@ void TranslatedDisk::onFattrib(BYTE *cmd)
 			}
 			close(fd);
 		}
+#else
+		if(attr.st_flags & UF_READONLY) oldAttrAtari |= FA_READONLY;
+		if(attr.st_flags & UF_HIDDEN) oldAttrAtari |= FA_HIDDEN;
+		if(attr.st_flags & UF_SYSTEM) oldAttrAtari |= FA_SYSTEM;
+		//if(attr.st_flags & UF_ARCHIVE) oldAttrAtari |= FA_ARCHIVE;
+#endif
 	}
-	
+
     if(setNotInquire) {     // SET attribs? - SET FAT Attributes!
 		if(hostIsFAT) {
 			int fd = open(hostName.c_str(), O_RDWR);
@@ -805,6 +816,7 @@ void TranslatedDisk::onFattrib(BYTE *cmd)
 	            dataTrans->setStatus(EACCDN);
 	            return;
 			}
+#if defined(__linux__)
 			__u32 dosattrs = ATTR_NONE;
 			if(attrAtariNew & FA_READONLY) dosattrs |= ATTR_RO;
 			if(attrAtariNew & FA_HIDDEN) dosattrs |= ATTR_HIDDEN;
@@ -817,6 +829,20 @@ void TranslatedDisk::onFattrib(BYTE *cmd)
 			} else {
 				Debug::out(LOG_DEBUG, "TranslatedDisk::onFattrib() -- FAT attributes %x set %s", (int)dosattrs, hostName.c_str());
 			}
+#else
+			unsigned long flags = 0;
+			if(attrAtariNew & FA_READONLY) flags |= UF_READONLY;
+			if(attrAtariNew & FA_HIDDEN) flags |= UF_HIDDEN;
+			if(attrAtariNew & FA_SYSTEM) flags |= UF_SYSTEM;
+			//if(attrAtariNew & FA_VOLUME) flags |= ATTR_VOLUME;
+			//if(attrAtariNew & FA_DIR) flags |= ATTR_DIR;
+			if(attrAtariNew & FA_ARCHIVE) flags |= UF_ARCHIVE;
+			if(fchflags(fd, flags) < 0) {
+				Debug::out(LOG_ERROR, "TranslatedDisk::onFattrib -- failed to set (FAT) files attributes on %s", hostName.c_str());
+			} else {
+				Debug::out(LOG_DEBUG, "TranslatedDisk::onFattrib -- attributes %lx set on %s", flags, hostName.c_str());
+			}
+#endif
 			close(fd);
 		}
 	/*
@@ -912,6 +938,7 @@ void TranslatedDisk::onFcreate(BYTE *cmd)
     // now set it's attributes
 	int fd = fileno(f);
 	if(fd >= 0) {
+#if defined(__linux__)
 		__u32 dosattrs = ATTR_NONE;
 		if(attribs & FA_READONLY) dosattrs |= ATTR_RO;
 		if(attribs & FA_HIDDEN) dosattrs |= ATTR_HIDDEN;
@@ -924,6 +951,20 @@ void TranslatedDisk::onFcreate(BYTE *cmd)
 		} else {
 			Debug::out(LOG_DEBUG, "TranslatedDisk::onFcreate -- attributes %x set on %s", (int)dosattrs, hostName.c_str());
 		}
+#else
+		unsigned long flags = 0;
+		if(attribs & FA_READONLY) flags |= UF_READONLY;
+		if(attribs & FA_HIDDEN) flags |= UF_HIDDEN;
+		if(attribs & FA_SYSTEM) flags |= UF_SYSTEM;
+		//if(attribs & FA_VOLUME) flags |= ATTR_VOLUME;
+		//if(attribs & FA_DIR) flags |= ATTR_DIR;
+		if(attribs & FA_ARCHIVE) flags |= UF_ARCHIVE;
+		if(fchflags(fd, flags) < 0) {
+			Debug::out(LOG_ERROR, "TranslatedDisk::onFcreate -- failed to set (FAT) files attributes on %s", hostName.c_str());
+		} else {
+			Debug::out(LOG_DEBUG, "TranslatedDisk::onFcreate -- attributes %lx set on %s", flags, hostName.c_str());
+		}
+#endif
 	}
 
     fclose(f);

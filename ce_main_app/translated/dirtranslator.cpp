@@ -10,7 +10,9 @@
 #include <errno.h>
 
 #include <sys/ioctl.h>
+#if defined(__linux__)
 #include <linux/msdos_fs.h>
+#endif
 
 #include "global.h"
 #include "../utils.h"
@@ -340,6 +342,7 @@ void DirTranslator::appendFoundToFindStorage(std::string &hostPath, const char *
 
 	// get MS-DOS VFAT attributes
 	{
+#if defined(__linux__)
 		int fd = open(fullEntryPath.c_str(), O_RDONLY);
 		if(fd >= 0) {
 			__u32 dosattrs = 0;
@@ -356,6 +359,9 @@ void DirTranslator::appendFoundToFindStorage(std::string &hostPath, const char *
 		} else {
 			Debug::out(LOG_ERROR, "TranslatedDisk::appendFoundToFindStorage -- open(%s) failed, errno %d", fullEntryPath.c_str(), errno);
 		}
+#else
+	// TODO use stat() and st_flags (see translateddisk_gemdos.cpp:803)
+#endif
 	}
 
     // GEMDOS File Attributes

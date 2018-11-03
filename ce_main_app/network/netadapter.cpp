@@ -24,6 +24,11 @@
 #include "netadapter_commands.h"
 #include "sting.h"
 
+// Fix for libc that does not define POLLRDHUP, but only POLLHUP
+#ifndef POLLRDHUP
+#define POLLRDHUP 0
+#endif
+
 #define REQUIRED_NETADAPTER_VERSION     0x0100
 
 #ifndef MAX

@@ -146,7 +146,9 @@ void *ikbdThreadCode(void *ptr)
 
         // process events from attached input devices
         struct input_event  ev;
+#if defined(__linux__)
         struct js_event     js;
+#endif
 
         for(i = 0; i < 6; i++) {                                        // go through the input devices
             fd = ikbd.getFdByIndex(i);
@@ -161,7 +163,9 @@ void *ikbdThreadCode(void *ptr)
                     break;
                 case INTYPE_JOYSTICK1:
                 case INTYPE_JOYSTICK2: // for joysticks
+#if defined(__linux__)
                     res = read(ikbd.getFdByIndex(i), &js, sizeof(js_event));
+#endif
                     break;
                 }
                 if(res < 0) {                                           // on error, skip the rest
@@ -186,7 +190,9 @@ void *ikbdThreadCode(void *ptr)
                         break;
                     case INTYPE_JOYSTICK1:
                     case INTYPE_JOYSTICK2:
+#if defined(__linux__)
                         ikbd.processJoystick(&js, i - INTYPE_JOYSTICK1);
+#endif
                         break;
                     }
                 }

@@ -1,3 +1,4 @@
+// vim: shiftwidth=4 softtabstop=4 tabstop=4 expandtab
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/syscall.h>
@@ -7,12 +8,22 @@
 
 #include <sys/stat.h>
 #include <sys/ioctl.h>
+#if defined(__linux__)
 #include <linux/fs.h>
+#else
+#include <sys/disk.h>
+#endif
 #include <fcntl.h>
 #include <errno.h>
 
 #include "devicemedia.h"
 #include "../debug.h"
+
+// Fixes for libc which does not define O_LARGEFILE
+// Anyway, -D_FILE_OFFSET_BITS=64 should be used.
+#ifndef O_LARGEFILE
+#define O_LARGEFILE 0
+#endif
 
 DeviceMedia::DeviceMedia()
 {
@@ -41,6 +52,7 @@ bool DeviceMedia::iopen(const char *path, bool createIfNotExists)
 	}
 
 
+#ifdef BLKGETSIZE
 	DWORD size;
 	int res = ioctl(fdes, BLKGETSIZE, &size);	// try to get device capacity in sectors
 	
@@ -48,8 +60,18 @@ bool DeviceMedia::iopen(const char *path, bool createIfNotExists)
 		return false;
 	}
 
-    SCapacity = size;              				    // capacity in sectors
+    SCapacity = size;                               // capacity in sectors
     BCapacity = ((int64_t) size) * ((int64_t)512);  // capacity in bytes
+#elif defined(DIOCGMEDIASIZE)
+    unsigned long long size64;
+    if (ioctl(fdes, DIOCGMEDIASIZE, &size64) < 0)
+        return false;
+
+    SCapacity = size64/512;     // capacity in sectors
+    BCapacity = size64;         // capacity in bytes
+#else
+#error "need BLKGETSIZE or DIOCGMEDIASIZE ioctl"
+#endif
 
     mediaHasChanged = false;
 

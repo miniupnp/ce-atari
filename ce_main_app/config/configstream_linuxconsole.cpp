@@ -6,8 +6,12 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/types.h>
+#if defined(__linux__)
 #include <utmp.h>
 #include <pty.h>
+#else
+#include <sys/ioctl.h>
+#endif
 #include <errno.h>
 
 #include "../global.h"

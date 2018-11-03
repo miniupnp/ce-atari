@@ -6,7 +6,14 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <queue>
+#if defined(__linux__)
 #include <pty.h>
+#else
+// theses are the FreeBSD #include's
+// this is there only for the builds with ONPC=yes (for testing)
+#include <libutil.h>
+#include <sys/ioctl.h>
+#endif
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/types.h>

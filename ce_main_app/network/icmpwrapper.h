@@ -4,8 +4,18 @@
 
 #include <stdlib.h>
 #include <string.h>
+#if defined(__linux__)
 #include <netinet/ip.h>
 #include <linux/icmp.h>
+#else
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <netinet/ip_icmp.h>
+#define iphdr ip
+#define icmphdr icmp
+#endif
 
 #include "../utils.h"
 #include "../global.h"
@@ -61,6 +71,7 @@ public:
     }
 
     void setIpHeader(DWORD src_addr, DWORD dst_addr, WORD dataLength) {
+#if defined(__linux__)
         ip->ihl         = 5;
         ip->version     = 4;        // IPv4
         ip->tos         = 0;
@@ -73,9 +84,11 @@ public:
 
         ip->check       = 0;                                                // first set checksum to zero
         ip->check       = checksum((WORD *) ip, sizeof(struct iphdr));      // then calculate real checksum and store it
+#endif
     }
 
     void setIcmpHeader(int type, int code, int id, int sequence) {
+#if defined(__linux__)
         icmp->type              = type;
         icmp->code              = code;
         icmp->un.echo.id        = htons(id);
@@ -83,6 +96,7 @@ public:
 
         icmp->checksum = 0;                                                 // first set checksum to zero
         icmp->checksum = checksum((WORD *) icmp, sizeof(struct icmphdr));   // then calculate real checksum and store it
+#endif
 
         echoId = id;
     }

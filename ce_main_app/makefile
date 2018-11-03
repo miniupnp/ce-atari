@@ -11,10 +11,16 @@ CFLAGS	= -Wall -g -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE
 CXXFLAGS = $(CFLAGS)
 DEPFLAGS = -MM -MT $(patsubst %.d,%.o,$@) -MT $@
 # -M : with system headers, -MM : without
+OS := $(shell uname -s)
 
 VPATH = ./lib
 LDFLAGS	= -Llib
-LDLIBS = -lrt -lanl -lpthread -lcurl -ldl -lutil
+LDLIBS = -lrt -lpthread -lcurl -ldl -lutil
+ifeq ($(OS),Linux)
+LDLIBS += -lanl
+else
+LDLIBS += -linotify
+endif
 
 ifeq ($(ONPC),yes)
     OBJDIR = obj/onpc

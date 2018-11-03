@@ -4,10 +4,17 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#if defined(__linux__)
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
 #include <linux/if.h>
 #include <arpa/inet.h>
+#else
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <net/if.h>
+#include <net/route.h>
+#endif
 
 #include "ifacewatcher.h"
 #include "debug.h"
@@ -16,6 +23,7 @@
 
 IfaceWatcher::IfaceWatcher()
 {
+#if defined(__linux__)
     fd = socket(PF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
     if(fd < 0) {
         Debug::out(LOG_ERROR, "%s%s: socket : %s", CLASSFUNC, strerror(errno));
@@ -30,6 +38,7 @@ IfaceWatcher::IfaceWatcher()
             fd = -1;
         }
     }
+#endif
 }
 
 IfaceWatcher::~IfaceWatcher()
@@ -42,6 +51,7 @@ IfaceWatcher::~IfaceWatcher()
 
 void IfaceWatcher::processMsg(bool * newIfaceUpAndRunning)
 {
+#if defined(__linux__)
     char buffer[4096];
     ssize_t len;
     struct iovec iov;
@@ -172,4 +182,5 @@ void IfaceWatcher::processMsg(bool * newIfaceUpAndRunning)
             Debug::out(LOG_ERROR, "%s%s unknown MSG type %d", CLASSFUNC, nlhdr->nlmsg_type);
         }
     }
+#endif
 }

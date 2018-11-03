@@ -11,6 +11,9 @@
 #include <sys/ioctl.h>
 #include <net/if.h>
 #include <errno.h>
+#if !defined(__linux__)
+#include <sys/wait.h>
+#endif
 
 #include <signal.h>
 #include <pthread.h>
@@ -319,7 +322,11 @@ bool Mounter::mount(const char *source, const char *target,
         Debug::out(LOG_DEBUG, "Mounter::mount - Mount dir %s was used and was unmounted.", target);
     }
 
+#if defined(__linux__)
     r = ::mount(source, target, type, MS_MGC_VAL | MS_NOEXEC | MS_NOATIME, options);
+#else
+    r = ::mount(type, target, MNT_NOEXEC | MNT_NOATIME, (void *)options);
+#endif
     if(r == 0) {
         Debug::out(LOG_DEBUG, "Mounter::mount - mount succeeded! (mount dir: %s)", target);
         return true;
@@ -452,6 +459,7 @@ bool Mounter::tryUnmount(const char *mountDir)
     sync();                             // sync the caches
 
     Debug::out(LOG_DEBUG, "Mounter::tryUnmount - umount(\"%s\")", mountDir);
+#if defined(__linux__)
     if(umount(mountDir) < 0) {
         Debug::out(LOG_ERROR, "Mounter::tryUnmount - umount failed : %s", strerror(errno));
         return false;
@@ -459,6 +467,9 @@ bool Mounter::tryUnmount(const char *mountDir)
         Debug::out(LOG_DEBUG, "Mounter::tryUnmount - umount succeeded\n");
         return true;
     }
+#else
+    return false;
+#endif
 }
 
 void Mounter::createSource(const char *host, const char *hostDir, bool nfsNotSamba, char *source)

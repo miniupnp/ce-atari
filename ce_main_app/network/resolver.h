@@ -21,7 +21,9 @@ struct Tresolv {
              BYTE           data[128];
              std::string    h_name;
 
+#if defined(__linux__)
              gaicb          req;
+#endif
              addrinfo       hints;
 };
 

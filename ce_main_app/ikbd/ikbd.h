@@ -3,7 +3,13 @@
 #define _IKBD_H_
 
 #include <termios.h>
+#if defined(__linux__)
 #include <linux/joystick.h>
+#else
+// theses are the FreeBSD #include's
+// this is there only for the builds with ONPC=yes (for testing)
+#include <dev/evdev/input.h>
+#endif
 
 #include <bitset>
 
@@ -79,7 +85,9 @@ public:
 
     void processMouse(input_event *ev);
     void processKeyboard(input_event *ev, bool skipKeyboardTranslation);
+#if defined(__linux__)
     void processJoystick(js_event *jse, int joyNumber);
+#endif
     void markVirtualMouseEvenTime(void);
 
     void processReceivedCommands(bool skipKeyboardTranslation);

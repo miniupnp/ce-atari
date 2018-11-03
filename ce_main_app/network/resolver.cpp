@@ -56,7 +56,9 @@ int ResolverRequest::addRequest(const char *hostName)
         r = &requests[emptyIndex];
         usedIndex = emptyIndex;
     } else {                    // if not found empty slot, cancel existing and use it
+#if defined(__linux__)
         gai_cancel(&requests[oldestIndex].req);       // try to cancel
+#endif
         r = &requests[oldestIndex];
         usedIndex = oldestIndex;
     }
@@ -69,7 +71,9 @@ int ResolverRequest::addRequest(const char *hostName)
 
     memset (r->hostName, 0, 256);
     strncpy(r->hostName, hostName, 255);                    // copy host name to our array
+#if defined(__linux__)
     r->req.ar_name      = r->hostName;                      // store pointer to that array
+#endif
 
     //-------------------
     // check and possibly resolve dotted IP
@@ -96,7 +100,8 @@ int ResolverRequest::addRequest(const char *hostName)
         }
     }
     //-------------------
-    
+
+#if defined(__linux__)
     r->hints.ai_flags   = AI_CANONNAME;                     // get the official name of the host
     r->req.ar_request   = &r->hints;
 
@@ -110,6 +115,9 @@ int ResolverRequest::addRequest(const char *hostName)
 
     Debug::out(LOG_DEBUG, "addRequest() - resolving %s under index %d", hostName, usedIndex);
     return usedIndex;           // return index under which this request runs
+#else
+    return -1;
+#endif
 }
 
 //---------------------------------
@@ -129,6 +137,7 @@ bool ResolverRequest::getaddrinfoHasFinished(int index)    // returns true if re
         return true;
     }
 
+#if defined(__linux__)
     // if we don't know if it finished yet, let's check it out
     r->error = gai_error(&r->req);
 
@@ -138,6 +147,9 @@ bool ResolverRequest::getaddrinfoHasFinished(int index)    // returns true if re
 
     r->getaddrinfoHasFinished = 1;              // ok, we're done
     return true;
+#else
+    return false;
+#endif
 }
 
 //---------------------------------
@@ -170,6 +182,7 @@ bool ResolverRequest::processSlot(int index)                // process the reque
         return false;
     }
 
+#if defined(__linux__)
     if(r->error != EAI_INPROGRESS && r->error != 0) {       // if it's done, but there's some error, there's nothing to do here
         r->processed = 1;
         return true;
@@ -215,6 +228,9 @@ bool ResolverRequest::processSlot(int index)                // process the reque
 
     r->processed = 1;
     return true;
+#else
+    return false;
+#endif
 }
 
 void ResolverRequest::showSlot(int index)
