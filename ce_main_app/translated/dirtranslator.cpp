@@ -290,19 +290,19 @@ void DirTranslator::appendFoundToFindStorage(std::string &hostPath, const char *
 //    if((found->dwFileAttributes & FILE_ATTRIBUTE_SYSTEM)!=0     && (findAttribs & FA_SYSTEM)==0)    // is system, but not searching for that
 //        return;
 
-	bool isDir = (de->d_type == DT_DIR);
-    if(isDir  && (findAttribs & FA_DIR)==0) {      // is dir, but not searching for that
-		return;
-	}
-
 //    // this one is now disabled as on Win almost everything has archive bit set, and thus TOS didn't show any files
 //    if((found->dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE)!=0    && (findAttribs & FA_ARCHIVE)==0)   // is archive, but not searching for that
 //        return;
+    bool isDir = (de->d_type == DT_DIR);
     appendFoundToFindStorage(hostPath, searchString, fs, de->d_name, isDir, findAttribs);
 }
 
 void DirTranslator::appendFoundToFindStorage(std::string &hostPath, const char *searchString, TFindStorage *fs, const char *name, bool isDir, BYTE findAttribs)
 {
+    if(isDir  && (findAttribs & FA_DIR)==0) {      // is dir, but not searching for that
+        return;
+    }
+
     // TODO: do support for checking the READ ONLY flag on linux
     bool isReadOnly = false;
     //--------
